@@ -2,30 +2,11 @@ from flask import Blueprint, request, jsonify, session
 from database.db import db_get_scheme_by_id, db_get_eligibility_history_by_user
 from models.eligibility_history import EligibilityHistory
 
+from services.eligibility_engine import evaluate_user_eligibility
+from services.scheme_service import get_scheme_recommendations
+
 # Create the ai Blueprint
 ai_bp = Blueprint("ai", __name__)
-
-# =====================================================================
-# TEMPORARY MOCKS (To be moved to services/ when implementing services)
-# =====================================================================
-def evaluate_user_eligibility(user_id, scheme_id):
-    """
-    Temporary placeholder for services.eligibility_engine.evaluate_user_eligibility.
-    """
-    return {
-        "scheme_id": scheme_id,
-        "eligible": True,
-        "match_percentage": 85.0,
-        "ai_explanation": "Mock eligibility check: criteria satisfied.",
-        "missing_requirements": [],
-        "missing_documents": []
-    }
-
-def get_scheme_recommendations(user_id):
-    """
-    Temporary placeholder for services.scheme_service.get_scheme_recommendations.
-    """
-    return []
 
 
 @ai_bp.route("/api/ai/eligibility", methods=["POST"])
