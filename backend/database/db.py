@@ -330,3 +330,92 @@ def db_get_eligibility_history_by_user_and_scheme(user_id, scheme_id):
         ORDER BY checked_at DESC LIMIT 1;
     """
     return execute_read_one(query, (user_id, scheme_id))
+
+# =====================================================================
+# DATABASE INITIALIZATION AND TABLE CREATION
+# =====================================================================
+
+def init_database():
+    """
+    Ensures all database tables exist on application startup.
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.executescript("""
+        CREATE TABLE IF NOT EXISTS users (
+            user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            full_name TEXT NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
+            phone_number TEXT,
+            age INTEGER,
+            gender TEXT,
+            state TEXT,
+            district TEXT,
+            education TEXT,
+            occupation TEXT,
+            annual_family_income REAL,
+            category TEXT,
+            is_disabled INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS schemes (
+            scheme_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            description TEXT NOT NULL,
+            category TEXT NOT NULL,
+            eligibility_criteria TEXT NOT NULL,
+            benefits TEXT NOT NULL,
+            required_documents TEXT,
+            department TEXT,
+            state TEXT,
+            application_url TEXT,
+            deadline TEXT,
+            is_active INTEGER DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS documents (
+            document_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            document_name TEXT NOT NULL,
+            document_type TEXT NOT NULL,
+            file_path TEXT NOT NULL,
+            file_size INTEGER NOT NULL,
+            mime_type TEXT NOT NULL,
+            verification_status TEXT DEFAULT 'Pending',
+            uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS notifications (
+            notification_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            title TEXT NOT NULL,
+            message TEXT NOT NULL,
+            notification_type TEXT DEFAULT 'Info',
+            is_read INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS eligibility_history (
+            history_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            scheme_id INTEGER NOT NULL,
+            eligibility_result TEXT NOT NULL,
+            match_percentage REAL NOT NULL,
+            ai_explanation TEXT,
+            missing_requirements TEXT,
+            checked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+            FOREIGN KEY (scheme_id) REFERENCES schemes(scheme_id) ON DELETE CASCADE
+        );
+    """)
+    conn.commit()
+    conn.close()
+    print("Database tables initialized successfully.")
+

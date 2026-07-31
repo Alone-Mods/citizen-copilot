@@ -10,6 +10,7 @@ class Config:
     or provides secure default values.
     """
     SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key-change-in-production")
+    DEBUG = os.getenv("FLASK_DEBUG", "True").lower() in ("true", "1", "t")
     
     # Absolute base directory of the backend folder
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
